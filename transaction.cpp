@@ -3,6 +3,10 @@
 
 using json = nlohmann::json;
 
+std::string buildTransactionMessage(const std::string& from, const std::string& to, int amount) {
+    return from + "|" + to + "|" + std::to_string(amount); 
+}
+
 void to_json(json& j, const Transaction& tx) {
     j = json{{"sender", tx.fromPublicKeyHex}, {"receiver", tx.toPublicKeyHex}, {"amount", tx.amount}, {"signature", tx.signatureHex}};
 }

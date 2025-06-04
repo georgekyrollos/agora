@@ -16,6 +16,8 @@ struct Transaction {
     }
 };
 
+std::string buildTransactionMessage(const std::string& from, const std::string& to, int amount);
+
 void to_json(json& j, const Transaction& tx);
 void from_json(const json& j, Transaction& tx);
 

@@ -22,6 +22,7 @@ MINER_SRC = \
 	mempool.cpp \
 	block.cpp \
 	blockchain.cpp \
+	wallet.cpp \
 	transaction.cpp \
 	crypto.cpp
 

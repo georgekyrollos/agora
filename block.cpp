@@ -5,17 +5,6 @@
 #include <iomanip>
 #include <openssl/sha.h>
 
-// Utility: SHA256 hash function
-static std::string sha256(const std::string& input) {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256((const unsigned char*)input.c_str(), input.size(), hash);
-
-    std::ostringstream oss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
-        oss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
-    return oss.str();
-}
-
 // Block constructor
 Block::Block(int idx, const std::string& ts, const std::vector<Transaction>& txs, const std::string& prevHash)
     : index(idx), timestamp(ts), previousHash(prevHash), nonce(0), hash("") {
