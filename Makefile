@@ -17,10 +17,19 @@ CREATE_WALLET_SRC = \
 	wallet.cpp \
 	crypto.cpp
 
+MINER_SRC = \
+	miner.cpp \
+	mempool.cpp \
+	block.cpp \
+	blockchain.cpp \
+	transaction.cpp \
+	crypto.cpp
+
 OBJS = $(SRC:.cpp=.o)
 CREATE_WALLET_OBJS = $(CREATE_WALLET_SRC:.cpp=.o)
+MINER_OBJS = $(MINER_SRC:.cpp=.o)
 
-all: agora create_wallet
+all: agora create_wallet miner
 
 agora: $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
@@ -28,10 +37,13 @@ agora: $(OBJS)
 create_wallet: $(CREATE_WALLET_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
+miner: $(MINER_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f *.o agora create_wallet
+	rm -f *.o agora create_wallet miner
 
 .PHONY: all clean
