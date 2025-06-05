@@ -1,12 +1,14 @@
 #include "block.hpp"
 #include "crypto.hpp"
 #include <algorithm>
+#include <string>
+#include <vector>
 #include <sstream>
 #include <iomanip>
 #include <openssl/sha.h>
 
 // Block constructor
-Block::Block(int idx, const std::string& ts, const std::vector<Transaction>& txs, const std::string& prevHash)
+Block::Block(int idx, const string& ts, const vector<Transaction>& txs, const string& prevHash)
     : index(idx), timestamp(ts), previousHash(prevHash), nonce(0), hash("") {
     
     int count = std::min((int)txs.size(), MAX_TXS_PER_BLOCK);
@@ -16,7 +18,7 @@ Block::Block(int idx, const std::string& ts, const std::vector<Transaction>& txs
 }
 
 // calculates the block's hash
-std::string Block::calculateHash() const {
+string Block::calculateHash() const {
     std::ostringstream data;
     data << index << timestamp << previousHash << nonce;
 

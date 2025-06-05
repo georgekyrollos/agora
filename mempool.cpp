@@ -22,7 +22,7 @@ void appendToMempool(const Transaction& tx) {
         {"sender", tx.fromPublicKeyHex},
         {"receiver", tx.toPublicKeyHex},
         {"amount", tx.amount},
-        {"signature", tx.signatureHex}
+        {"signature", tx.signatureHex},
     };
 
     mempool.push_back(txJson);

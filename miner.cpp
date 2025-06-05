@@ -82,6 +82,34 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
+
+    if (chain.empty()) {
+        std::cout << "Creating genesis block...\n";
+    
+        // Create a valid coinbase transaction
+        Transaction genesisReward;
+        genesisReward.fromPublicKeyHex = "COINBASE";
+        genesisReward.toPublicKeyHex = miner.publicKeyHex;
+        genesisReward.amount = BLOCK_REWARD;
+        genesisReward.signatureHex = "reward";
+    
+        std::vector<Transaction> genesisTxs;
+        genesisTxs.push_back(genesisReward);  // Avoid brace-init just in case of C++17 edge issues
+    
+        Block genesisBlock(
+            0,
+            currentTimestamp(),
+            genesisTxs,
+            "0"  // no previous hash
+        );
+    
+        mineBlock(genesisBlock, DIFFICULTY);
+        std::cout << "Genesis block mined: " << genesisBlock.hash << "\n";
+    
+        chain.push_back(genesisBlock);
+        saveBlockchain(chain, BLOCKCHAIN_FILE);
+    }
+
     std::vector<Transaction> mempool = loadMempool();
 
     if (mempool.empty()) {
@@ -95,11 +123,16 @@ int main(int argc, char* argv[]) {
     for (const auto& tx : mempool) {
         if (tx.fromPublicKeyHex == "COINBASE") continue;  // ignore malformed coinbases
         std::string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
+        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chain, validTxs);   // here 
         if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
+            if (senderBalance < tx.amount) {
+                std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to insufficient balance\n";
+                continue;
+            }
             validTxs.push_back(tx);
             if (validTxs.size() >= MAX_TXS_PER_BLOCK-1) break;
         } else {
-            std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << "\n";
+            std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << " due to signature verification failure\n";
         }
     }
 

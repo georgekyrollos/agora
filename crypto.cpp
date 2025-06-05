@@ -7,24 +7,27 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <string>
 
 
-static std::string toHex(const unsigned char* data, size_t len) {
+
+
+static string toHex(const unsigned char* data, size_t len) {
     std::ostringstream oss;
     for (size_t i = 0; i < len; ++i)
         oss << std::hex << std::setw(2) << std::setfill('0') << (int)data[i];
     return oss.str();
 }
 
-static std::vector<unsigned char> fromHex(const std::string& hex) {
-    std::vector<unsigned char> bytes;
+static vector<unsigned char> fromHex(const string& hex) {
+    vector<unsigned char> bytes;
     for (size_t i = 0; i < hex.length(); i += 2)
         bytes.push_back((unsigned char) strtol(hex.substr(i, 2).c_str(), nullptr, 16));
     return bytes;
 }
 
-std::string signMessage(const std::string& message, const std::string& privHex) {
-    std::vector<unsigned char> privBytes = fromHex(privHex);
+string signMessage(const string& message, const string& privHex) {
+    vector<unsigned char> privBytes = fromHex(privHex);
 
     EC_KEY* key = EC_KEY_new_by_curve_name(NID_secp256k1);
     BIGNUM* priv = BN_bin2bn(privBytes.data(), 32, nullptr);
@@ -41,7 +44,7 @@ std::string signMessage(const std::string& message, const std::string& privHex) 
     BN_bn2binpad(r, rbin, 32);
     BN_bn2binpad(s, sbin, 32);
 
-    std::string hexSig = toHex(rbin, 32) + toHex(sbin, 32);
+    string hexSig = toHex(rbin, 32) + toHex(sbin, 32);
 
     ECDSA_SIG_free(sig);
     BN_free(priv);
@@ -49,9 +52,9 @@ std::string signMessage(const std::string& message, const std::string& privHex) 
     return hexSig;
 }
 
-bool verifySignature(const std::string& message, const std::string& sigHex, const std::string& pubHex) {
-    std::vector<unsigned char> pubBytes = fromHex(pubHex);
-    std::vector<unsigned char> sigBytes = fromHex(sigHex);
+bool verifySignature(const string& message, const string& sigHex, const string& pubHex) {
+    vector<unsigned char> pubBytes = fromHex(pubHex);
+    vector<unsigned char> sigBytes = fromHex(sigHex);
 
     // if (pubBytes.size() != 65 || pubBytes[0] != 0x04) {
     //     std::cerr << "Invalid public key format\n";
@@ -80,7 +83,7 @@ bool verifySignature(const std::string& message, const std::string& sigHex, cons
     return valid == 1;
 }
 
-std::string sha256(const std::string& data) {
+string sha256(const string& data) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256((const unsigned char*)data.c_str(), data.size(), hash);
 
@@ -89,3 +92,32 @@ std::string sha256(const std::string& data) {
         oss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
     return oss.str();
 }
+
+double getBalance(const string& pubkey, const vector<Block>& chain) {
+    double balance = 0;
+    for (const auto& block : chain) {
+        for (const auto& tx : block.transactions) {
+            if (tx.toPublicKeyHex == pubkey) balance += tx.amount;
+            if (tx.fromPublicKeyHex == pubkey) balance -= tx.amount;
+        }
+    }
+    return balance;
+}
+
+
+
+double getEffectiveBalanceDuringMining(const string& pubKeyHex,const vector<Block>& chain,const vector<Transaction>& includedTxs) {
+    double confirmed = getBalance(pubKeyHex, chain);
+    double pendingSpent = 0.0;
+
+    for (const auto& tx : includedTxs) {
+        if (tx.fromPublicKeyHex == pubKeyHex) {
+            pendingSpent += tx.amount;
+        }
+    }
+
+    return confirmed - pendingSpent;
+}
+
+
+

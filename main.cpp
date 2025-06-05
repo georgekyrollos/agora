@@ -13,16 +13,6 @@ void usage(int code) {
     exit(code);
 }
 
-double getBalance(const std::string& pubkey, const std::vector<Block>& chain) {
-    double balance = 0;
-    for (const auto& block : chain) {
-        for (const auto& tx : block.transactions) {
-            if (tx.toPublicKeyHex == pubkey) balance += tx.amount;
-            if (tx.fromPublicKeyHex == pubkey) balance -= tx.amount;
-        }
-    }
-    return balance;
-}
 
 int main(int argc, char* argv[]) {
     if (argc == 2 && std::string(argv[1]) == "--list") {
@@ -53,8 +43,9 @@ int main(int argc, char* argv[]) {
         std::cin >> choice;
 
         if (choice == 1) {
-            std::vector<Block> chain = loadBlockchain("blockchain.json");
-            double balance = getBalance(w.publicKeyHex, chain);
+            const std::string BLOCKCHAIN_FILE = "blockchain.json";
+           std::vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
+           double balance = getBalance(w.publicKeyHex, chain);
             std::cout << "Your current balance is: " << balance << "\n";
         } else if (choice == 2) {
             std::string recipient;

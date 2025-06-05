@@ -3,22 +3,26 @@
 #include <vector>
 #include "transaction.hpp"
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
+using std::string;
+using std::vector;
+
 
 
 const int MAX_TXS_PER_BLOCK = 5; 
 
 struct Block {
     int index;
-    std::string timestamp;
-    std::vector<Transaction> transactions;
-    std::string previousHash;
+    string timestamp;
+    vector<Transaction> transactions;
+    string previousHash;
     int nonce;
-    std::string hash;
+    string hash;
 
-    Block(int idx, const std::string& ts, const std::vector<Transaction>& txs, const std::string& prevHash);
+    Block(int idx, const string& ts, const vector<Transaction>& txs, const string& prevHash);
 
-    std::string calculateHash() const;
+    string calculateHash() const;
 };
 
 

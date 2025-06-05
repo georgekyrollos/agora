@@ -2,21 +2,30 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include <string>
+#include <vector>
 #include <ctime>
+#include <fstream>        
+#include <stdexcept>      
+
 
 using json = nlohmann::json;
+using std::ifstream;
+using std::ofstream;
+using std::runtime_error;
+
 
 namespace {
-    std::string getCurrentTimestamp() {
-        std::time_t now = std::time(nullptr);
+    string getCurrentTimestamp() {
+        time_t now = time(nullptr);
         char buf[64];
-        std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-        return std::string(buf);
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        return string(buf);
     }
 }
 
-std::vector<Block> loadBlockchain(const std::string& filename) {
-    std::ifstream in(filename);
+vector<Block> loadBlockchain(const string& filename) {
+    ifstream in(filename);
     if (!in.is_open()) {
         std::cerr << "Blockchain file not found. Creating genesis block.\n";
         Block genesis(0, getCurrentTimestamp(), {}, "0");
@@ -27,12 +36,12 @@ std::vector<Block> loadBlockchain(const std::string& filename) {
     in >> j;
     in.close();
 
-    std::vector<Block> chain;
+    vector<Block> chain;
     for (const auto& blockJson : j) {
         Block b(
             blockJson["index"],
             blockJson["timestamp"],
-            blockJson["transactions"].get<std::vector<Transaction>>(),
+            blockJson["transactions"].get<vector<Transaction>>(),
             blockJson["previousHash"]
         );
         b.nonce = blockJson["nonce"];
@@ -42,24 +51,24 @@ std::vector<Block> loadBlockchain(const std::string& filename) {
     return chain;
 }
 
-void saveBlockchain(const std::vector<Block>& chain, const std::string& filename) {
+void saveBlockchain(const vector<Block>& chain, const string& filename) {
     json j = chain;
-    std::ofstream out(filename);
+    ofstream out(filename);
     out << j.dump(4);
     out.close();
 }
 
-const Block& getLastBlock(const std::vector<Block>& chain) {
-    if (chain.empty()) throw std::runtime_error("Blockchain is empty.");
+const Block& getLastBlock(const vector<Block>& chain) {
+    if (chain.empty()) throw runtime_error("Blockchain is empty.");
     return chain.back();
 }
 
-void appendBlock(std::vector<Block>& chain, const Block& newBlock, const std::string& filename) {
+void appendBlock(vector<Block>& chain, const Block& newBlock, const string& filename) {
     chain.push_back(newBlock);
     saveBlockchain(chain, filename);
 }
 
-bool validateBlockchain(const std::vector<Block>& chain) {
+bool validateBlockchain(const vector<Block>& chain) {
     for (size_t i = 1; i < chain.size(); ++i) {
         const Block& prev = chain[i - 1];
         const Block& curr = chain[i];
