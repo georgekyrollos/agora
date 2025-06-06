@@ -9,28 +9,28 @@ using std::vector;
 using std::set;
 
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: ./validate <blockchain.json>\n";
-        return 1;
-    }
+// int main(int argc, char* argv[]) {
+//     if (argc != 2) {
+//         std::cerr << "Usage: ./validate <blockchain.json>\n";
+//         return 1;
+//     }
 
-    string filename = argv[1];
-    vector<Block> chain = loadBlockchain(filename);
+//     string filename = argv[1];
+//     vector<Block> chain = loadBlockchain(filename);
 
-    if (chain.empty()) {
-        std::cerr << "Blockchain file is empty or malformed.\n";
-        return 1;
-    }
+//     if (chain.empty()) {
+//         std::cerr << "Blockchain file is empty or malformed.\n";
+//         return 1;
+//     }
 
-    if (validateBlockchain(chain)) {
-        std::cout << "Blockchain is VALID\n";
-    } else {
-        std::cout << "Blockchain is INVALID\n";
-    }
+//     if (validateBlockchain(chain)) {
+//         std::cout << "Blockchain is VALID\n";
+//     } else {
+//         std::cout << "Blockchain is INVALID\n";
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 
 bool validateTransaction(const Transaction& tx, const vector<Block>& chain) {

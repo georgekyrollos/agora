@@ -3,6 +3,7 @@
 #include "crypto.hpp"
 #include "mempool.hpp"
 #include "blockchain.hpp"
+#include "chainset.hpp"
 #include <vector>
 #include <string>
 
@@ -54,7 +55,10 @@ int main(int argc, char* argv[]) {
 
         if (choice == 1) {
             const std::string BLOCKCHAIN_FILE = "blockchain.json";
-           std::vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
+            const std::string BLOCKCHAINS_FILE = "blockchains.json";
+           ChainSet chainSet;
+           chainSet = loadChainSet(BLOCKCHAINS_FILE);
+           std::vector<Block> chain = chainSet.getMainChain();
            double balance = getBalance(w.publicKeyHex, chain);
             std::cout << "Your current balance is: " << balance << "\n";
         } else if (choice == 2) {

@@ -1,5 +1,6 @@
 #include "block.hpp"
 #include "blockchain.hpp"
+#include "chainset.hpp"
 #include "transaction.hpp"
 #include "crypto.hpp"
 #include "wallet.hpp"
@@ -18,7 +19,7 @@ using std::vector;
 
 const int BLOCK_REWARD = 10;
 const string MEMPOOL_FILE = "mempool.json";
-const string BLOCKCHAIN_FILE = "blockchain.json";
+const string BLOCKCHAINS_FILE = "blockchains.json";
 
 // Timestamp utility
 namespace {
@@ -83,9 +84,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
-
-    if (chain.empty()) {
+    ChainSet chainSet;
+    chainSet = loadChainSet(BLOCKCHAINS_FILE);
+    
+    if (chainSet.getMainChain().empty()) {
         std::cout << "Creating genesis block...\n";
     
         // Create a valid coinbase transaction
@@ -110,24 +112,25 @@ int main(int argc, char* argv[]) {
         mineBlock(genesisBlock, DIFFICULTY);
         std::cout << "Genesis block mined: " << genesisBlock.hash << "\n";
     
-        chain.push_back(genesisBlock);
-        saveBlockchain(chain, BLOCKCHAIN_FILE);
+        chainSet.addNewChain({genesisBlock});
+        saveAllChains(chainSet.chains, 0, BLOCKCHAINS_FILE);
     }
 
     vector<Transaction> mempool = loadMempool();
+    // vector<Block> chain = chainSet.getMainChain();
 
     if (mempool.empty()) {
         std::cout << "Mempool is empty.\n";
         return 0;
     }
 
-    const Block& lastBlock = chain.back();
+    const Block& lastBlock = chainSet.chains[chainSet.mainIndex].back();
     vector<Transaction> validTxs;
 
     for (const auto& tx : mempool) {
         if (tx.fromPublicKeyHex == "COINBASE") continue;  // ignore malformed coinbases
         string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
-        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chain, validTxs);   // here 
+        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);   // here 
         if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
             if (senderBalance < tx.amount) {
                 std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to insufficient balance\n";
@@ -168,8 +171,9 @@ int main(int argc, char* argv[]) {
     mineBlock(newBlock, DIFFICULTY);
     std::cout << "Block mined: " << newBlock.hash << "\n";
 
-    chain.push_back(newBlock);
-    saveBlockchain(chain, BLOCKCHAIN_FILE);
+    chainSet.chains[chainSet.mainIndex].push_back(newBlock);
+    chainSet.tryReplaceMainChain(chainSet.chains[chainSet.mainIndex]);
+    saveAllChains(chainSet.chains, chainSet.mainIndex, BLOCKCHAINS_FILE);
 
     // Remove included transactions from mempool
     for (const auto& tx : validTxs) {

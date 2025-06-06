@@ -8,7 +8,6 @@
 #include <iostream>
 #include <openssl/sha.h>
 
-// Block constructor
 Block::Block(int idx, const string& ts, const vector<Transaction>& txs, const string& prevHash)
     : index(idx), timestamp(ts), previousHash(prevHash), nonce(0), hash("") {
     
@@ -19,8 +18,6 @@ Block::Block(int idx, const string& ts, const vector<Transaction>& txs, const st
     hash = calculateHash();  
 }
 
-
-// calculates the block's hash
 string Block::calculateHash() const {
     std::ostringstream data;
     data << index << timestamp << previousHash << nonce;
