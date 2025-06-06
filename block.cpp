@@ -5,17 +5,20 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <openssl/sha.h>
 
 // Block constructor
 Block::Block(int idx, const string& ts, const vector<Transaction>& txs, const string& prevHash)
     : index(idx), timestamp(ts), previousHash(prevHash), nonce(0), hash("") {
     
-    int count = std::min((int)txs.size(), MAX_TXS_PER_BLOCK);
-    transactions.assign(txs.begin(), txs.begin() + count);
+    transactions = txs;
+    if (transactions.size() > MAX_TXS_PER_BLOCK)
+        transactions.resize(MAX_TXS_PER_BLOCK);
 
     hash = calculateHash();  
 }
+
 
 // calculates the block's hash
 string Block::calculateHash() const {
@@ -48,5 +51,3 @@ void from_json(const nlohmann::json& j, Block& b) {
     j.at("nonce").get_to(b.nonce);
     j.at("hash").get_to(b.hash);
 }
-
-

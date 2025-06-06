@@ -11,6 +11,9 @@ using std::vector;
 
 
 const int MAX_TXS_PER_BLOCK = 5; 
+const int DIFFICULTY = 6;
+const string REWARD_SIG = "reward";
+const string META = "COINBASE";
 
 struct Block {
     int index;

@@ -1,23 +1,27 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
-
-
+using std::string;
+using std::vector;
 
 struct Transaction {
-    std::string fromPublicKeyHex;
-    std::string toPublicKeyHex;
+    string fromPublicKeyHex;
+    string toPublicKeyHex;
     double amount;
-    std::string signatureHex;
+    string signatureHex;
+    string ts;
+    string id;
 
-    std::string serialize() const {
+    string serialize() const {
         return fromPublicKeyHex + "|" + toPublicKeyHex + "|" + std::to_string(amount);
     }
 };
 
-std::string buildTransactionMessage(const std::string& from, const std::string& to, int amount);
-std::string computeTransactionID(const Transaction& tx);
+string buildTransactionMessage(const string& from, const string& to, int amount);
+string computeTransactionID(const Transaction& tx);
 
 void to_json(json& j, const Transaction& tx);
 void from_json(const json& j, Transaction& tx);

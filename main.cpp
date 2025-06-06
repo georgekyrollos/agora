@@ -6,6 +6,16 @@
 #include <vector>
 #include <string>
 
+namespace {
+    std::string getCurrentTimestamp() {
+        time_t now = time(nullptr);
+        char buf[64];
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        return string(buf);
+    }
+}
+
+
 void usage(int code) {
     std::cerr << "Usage:\n";
     std::cerr << "  ./agora <wallet.dat>    to use your wallet (view balance or send)\n";
@@ -60,7 +70,15 @@ int main(int argc, char* argv[]) {
             std::string msg = buildTransactionMessage(w.publicKeyHex, recipient, amount);
             std::string sig = signMessage(msg, w.privateKeyHex);
 
-            Transaction tx = { w.publicKeyHex, recipient, amount, sig };
+            Transaction tx;
+            tx.fromPublicKeyHex = w.publicKeyHex;
+            tx.toPublicKeyHex = recipient;
+            tx.amount = amount;
+            tx.signatureHex = sig;
+            tx.ts = getCurrentTimestamp();
+            tx.id = computeTransactionID(tx);
+
+            
 
             if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
                 appendToMempool(tx);

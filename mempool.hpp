@@ -2,6 +2,12 @@
 #pragma once
 #include "transaction.hpp"
 
+#include <vector>
+#include <string>
+
+using std::string;
+using std::vector;
+
 void appendToMempool(const Transaction& tx);
 void printMempool();
-std::vector<Transaction> readMempool();
+vector<Transaction> readMempool();

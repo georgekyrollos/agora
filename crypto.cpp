@@ -10,8 +10,6 @@
 #include <string>
 
 
-
-
 static string toHex(const unsigned char* data, size_t len) {
     std::ostringstream oss;
     for (size_t i = 0; i < len; ++i)

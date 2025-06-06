@@ -13,36 +13,38 @@
 #include <algorithm>
 
 using json = nlohmann::json;
+using std::string;
+using std::vector;
 
-const int DIFFICULTY = 4;
 const int BLOCK_REWARD = 10;
-const std::string MEMPOOL_FILE = "mempool.json";
-const std::string BLOCKCHAIN_FILE = "blockchain.json";
+const string MEMPOOL_FILE = "mempool.json";
+const string BLOCKCHAIN_FILE = "blockchain.json";
 
 // Timestamp utility
-std::string currentTimestamp() {
-    std::time_t now = std::time(nullptr);
-    char buf[100];
-    strftime(buf, sizeof(buf), "%FT%TZ", std::gmtime(&now));
-    return std::string(buf);
+namespace {
+    string getCurrentTimestamp() {
+        time_t now = time(nullptr);
+        char buf[64];
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        return string(buf);
+    }
 }
 
 // Calculate hash using a candidate nonce
-std::string calculateHash(const Block& block, uint64_t nonce) {
+string calculateHash(const Block& block, uint64_t nonce) {
     std::ostringstream oss;
-    oss << block.index << block.timestamp;
+    oss << block.index << block.timestamp << block.previousHash << nonce;
     for (const auto& tx : block.transactions) {
-        oss << tx.fromPublicKeyHex << tx.toPublicKeyHex << tx.amount;
+        oss << tx.fromPublicKeyHex << tx.toPublicKeyHex << tx.amount << tx.signatureHex;
     }
-    oss << block.previousHash << nonce;
     return sha256(oss.str());
 }
 
 // Mine the block: updates nonce and hash
 void mineBlock(Block& block, int difficulty) {
-    std::string prefix(difficulty, '0');
+    string prefix(difficulty, '0');
     uint64_t nonce = 0;
-    std::string hash;
+    string hash;
 
     do {
         hash = calculateHash(block, nonce);
@@ -54,16 +56,16 @@ void mineBlock(Block& block, int difficulty) {
 }
 
 // Load mempool
-std::vector<Transaction> loadMempool() {
+vector<Transaction> loadMempool() {
     std::ifstream in(MEMPOOL_FILE);
     if (!in.is_open()) return {};
     json j;
     in >> j;
-    return j.get<std::vector<Transaction>>();
+    return j.get<vector<Transaction>>();
 }
 
 // Save mempool
-void saveMempool(const std::vector<Transaction>& mempool) {
+void saveMempool(const vector<Transaction>& mempool) {
     std::ofstream out(MEMPOOL_FILE);
     json j = mempool;
     out << j.dump(4);
@@ -81,24 +83,26 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
+    vector<Block> chain = loadBlockchain(BLOCKCHAIN_FILE);
 
     if (chain.empty()) {
         std::cout << "Creating genesis block...\n";
     
         // Create a valid coinbase transaction
         Transaction genesisReward;
-        genesisReward.fromPublicKeyHex = "COINBASE";
+        genesisReward.fromPublicKeyHex = META;
         genesisReward.toPublicKeyHex = miner.publicKeyHex;
         genesisReward.amount = BLOCK_REWARD;
-        genesisReward.signatureHex = "reward";
+        genesisReward.signatureHex = REWARD_SIG;
+        genesisReward.ts = getCurrentTimestamp();
+        genesisReward.id = computeTransactionID(genesisReward);
     
-        std::vector<Transaction> genesisTxs;
+        vector<Transaction> genesisTxs;
         genesisTxs.push_back(genesisReward);  // Avoid brace-init just in case of C++17 edge issues
     
         Block genesisBlock(
             0,
-            currentTimestamp(),
+            getCurrentTimestamp(),
             genesisTxs,
             "0"  // no previous hash
         );
@@ -110,7 +114,7 @@ int main(int argc, char* argv[]) {
         saveBlockchain(chain, BLOCKCHAIN_FILE);
     }
 
-    std::vector<Transaction> mempool = loadMempool();
+    vector<Transaction> mempool = loadMempool();
 
     if (mempool.empty()) {
         std::cout << "Mempool is empty.\n";
@@ -118,11 +122,11 @@ int main(int argc, char* argv[]) {
     }
 
     const Block& lastBlock = chain.back();
-    std::vector<Transaction> validTxs;
+    vector<Transaction> validTxs;
 
     for (const auto& tx : mempool) {
         if (tx.fromPublicKeyHex == "COINBASE") continue;  // ignore malformed coinbases
-        std::string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
+        string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
         double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chain, validTxs);   // here 
         if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
             if (senderBalance < tx.amount) {
@@ -142,19 +146,20 @@ int main(int argc, char* argv[]) {
     }
 
     // Add block reward as the first transaction
-    Transaction rewardTx = {
-        "COINBASE",
-        miner.publicKeyHex,
-        BLOCK_REWARD,
-        "reward"  // placeholder signature
-    };
+    Transaction rewardTx;
+    rewardTx.fromPublicKeyHex = META;
+    rewardTx.toPublicKeyHex = miner.publicKeyHex;
+    rewardTx.amount = BLOCK_REWARD;
+    rewardTx.signatureHex = REWARD_SIG;
+    rewardTx.ts = getCurrentTimestamp();
+    rewardTx.id = computeTransactionID(rewardTx);
 
-    std::vector<Transaction> blockTxs = { rewardTx };
+    vector<Transaction> blockTxs = { rewardTx };
     blockTxs.insert(blockTxs.end(), validTxs.begin(), validTxs.end());
 
     Block newBlock(
         lastBlock.index + 1,
-        currentTimestamp(),
+        getCurrentTimestamp(),
         blockTxs,
         lastBlock.hash
     );

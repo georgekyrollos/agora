@@ -35,7 +35,6 @@ vector<Block> loadBlockchain(const string& filename) {
     json j;
     in >> j;
     in.close();
-
     vector<Block> chain;
     for (const auto& blockJson : j) {
         Block b(
@@ -68,25 +67,25 @@ void appendBlock(vector<Block>& chain, const Block& newBlock, const string& file
     saveBlockchain(chain, filename);
 }
 
-bool validateBlockchain(const vector<Block>& chain) {
-    for (size_t i = 1; i < chain.size(); ++i) {
-        const Block& prev = chain[i - 1];
-        const Block& curr = chain[i];
+// bool validateBlockchain(const vector<Block>& chain) {
+//     for (size_t i = 1; i < chain.size(); ++i) {
+//         const Block& prev = chain[i - 1];
+//         const Block& curr = chain[i];
 
-        // Check previous hash linkage
-        if (curr.previousHash != prev.hash) {
-            std::cerr << "Invalid previous hash at block " << curr.index << "\n";
-            return false;
-        }
+//         // Check previous hash linkage
+//         if (curr.previousHash != prev.hash) {
+//             std::cerr << "Invalid previous hash at block " << curr.index << "\n";
+//             return false;
+//         }
 
-        // Recalculate hash and check it matches stored value
-        if (curr.calculateHash() != curr.hash) {
-            std::cerr << "Invalid hash at block " << curr.index << "\n";
-            return false;
-        }
-    }
-    return true;
-}
+//         // Recalculate hash and check it matches stored value
+//         if (curr.calculateHash() != curr.hash) {
+//             std::cerr << "Invalid hash at block " << curr.index << "\n";
+//             return false;
+//         }
+//     }
+//     return true;
+// }
 
 
 
