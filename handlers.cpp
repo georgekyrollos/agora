@@ -14,6 +14,7 @@ void handleMessage(const json& j)
 {
     string type;
     j.at("type").get_to(type);
+
     if(type == TX_FLAG)
     {
         Transaction tx;
@@ -85,6 +86,20 @@ void handleBlock(Block bk) {
     std::lock_guard<std::mutex> lock(chainsetMutex);
     ChainSet chainSet = loadChainSet(BLOCKCHAINS_FILE);
     bool addedToExisting = false;
+
+    if (chainSet.chains.empty() && bk.index == 0 && bk.previousHash == "0") {
+        if (validateBlock(bk, bk, {})) {  
+            chainSet.chains.push_back({bk});
+            chainSet.mainIndex = 0;
+            saveAllChains(chainSet.chains, chainSet.mainIndex, BLOCKCHAINS_FILE);
+            std::cout << "Genesis block accepted.\n";
+            return;
+        } else {
+            std::cout << "Invalid genesis block.\n";
+            return;
+        }
+    }
+
 
     for (auto& chain : chainSet.chains) {
         if (chain.back().hash == bk.previousHash) {

@@ -22,30 +22,41 @@ bool validateTransaction(const Transaction& tx, const vector<Block>& chain) {
 }
 
 bool validateBlock(const Block& block, const Block& previousBlock, const vector<Block>& chainSoFar) {
-    // if (block.previousHash != previousBlock.hash) return false;
-    // if (block.hash != block.calculateHash()) return false;
-    // if (block.hash.substr(0, DIFFICULTY) != string(DIFFICULTY, '0')) return false;
-    if (block.previousHash != previousBlock.hash) {
-        std::cout << "FAILED: previousHash mismatch\n";
-        std::cout << "Expected: " << previousBlock.hash << "\n";
-        std::cout << "Got:      " << block.previousHash << "\n";
-        return false;
-    }
+    if (block.index == 0) {
+        if (block.previousHash != "0") return false;
+        if (block.hash != block.calculateHash()) return false;
+        if (block.hash.substr(0, DIFFICULTY) != string(DIFFICULTY, '0')) return false;
 
-    string recomputed = block.calculateHash();
-    if (block.hash != recomputed) {
-        std::cout << "FAILED: hash mismatch\n";
-        std::cout << "Expected: " << recomputed << "\n";
-        std::cout << "Got:      " << block.hash << "\n";
-        return false;
-    }
+        // Genesis block can only contain a coinbase transaction
+        if (block.transactions.size() != 1 || block.transactions[0].fromPublicKeyHex != META)
+            return false;
 
-    if (block.hash.substr(0, DIFFICULTY) != string(DIFFICULTY, '0')) {
-        std::cout << "FAILED: hash does not meet difficulty requirement\n";
-        std::cout << "Hash:      " << block.hash << "\n";
-        std::cout << "Expected prefix: " << string(DIFFICULTY, '0') << "\n";
-        return false;
+        return true;
     }
+    if (block.previousHash != previousBlock.hash) return false;
+    if (block.hash != block.calculateHash()) return false;
+    if (block.hash.substr(0, DIFFICULTY) != string(DIFFICULTY, '0')) return false;
+    // if (block.previousHash != previousBlock.hash) {
+    //     std::cout << "FAILED: previousHash mismatch\n";
+    //     std::cout << "Expected: " << previousBlock.hash << "\n";
+    //     std::cout << "Got:      " << block.previousHash << "\n";
+    //     return false;
+    // }
+
+    // string recomputed = block.calculateHash();
+    // if (block.hash != recomputed) {
+    //     std::cout << "FAILED: hash mismatch\n";
+    //     std::cout << "Expected: " << recomputed << "\n";
+    //     std::cout << "Got:      " << block.hash << "\n";
+    //     return false;
+    // }
+
+    // if (block.hash.substr(0, DIFFICULTY) != string(DIFFICULTY, '0')) {
+    //     std::cout << "FAILED: hash does not meet difficulty requirement\n";
+    //     std::cout << "Hash:      " << block.hash << "\n";
+    //     std::cout << "Expected prefix: " << string(DIFFICULTY, '0') << "\n";
+    //     return false;
+    // }
    
     set<string> seenIds;
     bool seenCoinbase = false;
