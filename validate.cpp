@@ -9,30 +9,6 @@ using std::vector;
 using std::set;
 
 
-// int main(int argc, char* argv[]) {
-//     if (argc != 2) {
-//         std::cerr << "Usage: ./validate <blockchain.json>\n";
-//         return 1;
-//     }
-
-//     string filename = argv[1];
-//     vector<Block> chain = loadBlockchain(filename);
-
-//     if (chain.empty()) {
-//         std::cerr << "Blockchain file is empty or malformed.\n";
-//         return 1;
-//     }
-
-//     if (validateBlockchain(chain)) {
-//         std::cout << "Blockchain is VALID\n";
-//     } else {
-//         std::cout << "Blockchain is INVALID\n";
-//     }
-
-//     return 0;
-// }
-
-
 bool validateTransaction(const Transaction& tx, const vector<Block>& chain) {
     if (tx.fromPublicKeyHex == META) {
         return tx.signatureHex == REWARD_SIG;
@@ -89,12 +65,40 @@ bool validateBlock(const Block& block, const Block& previousBlock, const vector<
     return true;
 }
 
-bool validateBlockchain(const vector<Block>& chain) {
+bool validateBlockchainOLD(const vector<Block>& chain) {
     if (chain.empty()) return false;
     for (size_t i = 1; i < chain.size(); ++i) {
         vector<Block> upToPrev(chain.begin(), chain.begin() + i);
         if (!validateBlock(chain[i], chain[i - 1], upToPrev)) return false;
     }
+    return true;
+}
+
+bool validateBlockchain(const vector<Block>& chain) {
+    if (chain.empty()) return false;
+
+    std::set<string> globalSeenTxIDs;
+
+    for (size_t i = 1; i < chain.size(); ++i) {
+        const Block& block = chain[i];
+
+        // Check for duplicate transactions across the entire chain
+        for (const auto& tx : block.transactions) {
+            if (globalSeenTxIDs.count(tx.id)) {
+                std::cout << "Duplicate transaction ID detected: " << tx.id << "\n";
+                return false;
+            }
+            globalSeenTxIDs.insert(tx.id);
+        }
+
+        // Validate block
+        vector<Block> upToPrev(chain.begin(), chain.begin() + i);
+        if (!validateBlock(block, chain[i - 1], upToPrev)) {
+            std::cout << "Block " << i << " failed validation.\n";
+            return false;
+        }
+    }
+
     return true;
 }
 

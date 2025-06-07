@@ -12,14 +12,15 @@
 #include <ctime>
 #include <sstream>
 #include <algorithm>
+#include <unordered_set>
 
 using json = nlohmann::json;
 using std::string;
 using std::vector;
 
-const int BLOCK_REWARD = 10;
-const string MEMPOOL_FILE = "mempool.json";
-const string BLOCKCHAINS_FILE = "blockchains.json";
+// const int BLOCK_REWARD = 10;
+// const string MEMPOOL_FILE = "mempool.json";
+// const string BLOCKCHAINS_FILE = "blockchains.json";
 
 // Timestamp utility
 namespace {
@@ -127,26 +128,58 @@ int main(int argc, char* argv[]) {
     const Block& lastBlock = chainSet.chains[chainSet.mainIndex].back();
     vector<Transaction> validTxs;
 
+    // for (const auto& tx : mempool) {
+    //     if (tx.fromPublicKeyHex == "COINBASE") continue;  // ignore malformed coinbases
+    //     string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
+    //     double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);   // here 
+    //     if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
+    //         if (senderBalance < tx.amount) {
+    //             std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to insufficient balance\n";
+    //             continue;
+    //         }
+    //         if (isTxInChainSetOrValidTxs(tx.id, chainSet, validTxs)) {
+    //             std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to duplicate\n";
+    //             continue;
+    //         }
+    //         validTxs.push_back(tx);
+    //         if (validTxs.size() >= MAX_TXS_PER_BLOCK-1) break;
+    //     } else {
+    //         std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << " due to signature verification failure\n";
+    //     }
+    // }
+
+    std::unordered_set<string> seenTxIDs;
     for (const auto& tx : mempool) {
-        if (tx.fromPublicKeyHex == "COINBASE") continue;  // ignore malformed coinbases
-        string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
-        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);   // here 
-        if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
-            if (senderBalance < tx.amount) {
-                std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to insufficient balance\n";
-                continue;
-            }
-            validTxs.push_back(tx);
-            if (validTxs.size() >= MAX_TXS_PER_BLOCK-1) break;
-        } else {
-            std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << " due to signature verification failure\n";
+        if (tx.fromPublicKeyHex == "COINBASE") continue;
+
+        if (seenTxIDs.count(tx.id) || isTxInChainSet(tx.id, chainSet)) {
+            std::cout << "Skipping duplicate transaction " << tx.id << "\n";
+            continue;
         }
+
+        string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
+        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);
+
+        if (!verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
+            std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << "\n";
+            continue;
+        }
+
+        if (senderBalance < tx.amount) {
+            std::cout << "Skipping transaction from " << tx.fromPublicKeyHex << " due to insufficient balance\n";
+            continue;
+        }
+
+        validTxs.push_back(tx);
+        seenTxIDs.insert(tx.id);
+
+        if (validTxs.size() >= MAX_TXS_PER_BLOCK - 1) break;
     }
 
-    if (validTxs.empty()) {
-        std::cout << "No valid transactions to include in the block.\n";
-        return 0;
-    }
+        if (validTxs.empty()) {
+            std::cout << "No valid transactions to include in the block.\n";
+            return 0;
+        }
 
     // Add block reward as the first transaction
     Transaction rewardTx;

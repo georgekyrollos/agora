@@ -8,6 +8,9 @@
 using std::string;
 using std::vector;
 
-vector<string> loadIPs(const string& filename = "ips.dat");
-void broadcastMessage(const string& message, int port = 8080);
+const int DEFAULT_PORT = 8080;
+const string IPS_FILE = "ips.dat";
+
+vector<string> loadIPs(const string& filename);
+void broadcastMessage(const string& message, int port);
 void listenOnPort(int port, const std::function<void(const std::string&)>& handler);

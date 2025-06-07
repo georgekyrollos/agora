@@ -23,14 +23,12 @@ vector<string> loadIPs(const string& filename) {
     return ips;
 }
 
-void broadcastMessage(const string& message, int port) {
-    vector<string> peers = loadIPs();
-
-    for (const auto& ip : peers) {
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
+void sendToPeer(const string& message, const string& ip, int port)
+{
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0) {
             std::cerr << "Socket creation failed for " << ip << "\n";
-            continue;
+            return;
         }
 
         sockaddr_in serverAddr{};
@@ -39,17 +37,24 @@ void broadcastMessage(const string& message, int port) {
         if (inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr) <= 0) {
             std::cerr << "Invalid IP address: " << ip << "\n";
             close(sock);
-            continue;
+            return;
         }
 
         if (connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
             std::cerr << "Connection failed to " << ip << "\n";
             close(sock);
-            continue;
+            return;
         }
 
         send(sock, message.c_str(), message.size(), 0);
         close(sock);
+}
+
+void broadcastMessage(const string& message, int port) {
+    vector<string> peers = loadIPs(IPS_FILE);
+
+    for (const auto& ip : peers) {
+        sendToPeer(message, ip, port);
     }
 }
 

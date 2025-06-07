@@ -12,7 +12,7 @@
 
 static string toHex(const unsigned char* data, size_t len) {
     std::ostringstream oss;
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < len; i++) // ++i
         oss << std::hex << std::setw(2) << std::setfill('0') << (int)data[i];
     return oss.str();
 }
@@ -101,8 +101,6 @@ double getBalance(const string& pubkey, const vector<Block>& chain) {
     }
     return balance;
 }
-
-
 
 double getEffectiveBalanceDuringMining(const string& pubKeyHex,const vector<Block>& chain,const vector<Transaction>& includedTxs) {
     double confirmed = getBalance(pubKeyHex, chain);

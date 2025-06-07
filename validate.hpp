@@ -7,3 +7,4 @@
 bool validateTransaction(const Transaction& tx, const vector<Block>& chain);
 bool validateBlock(const Block& block, const Block& previousBlock, const vector<Block>& chain);
 bool validateBlockchain(const vector<Block>& chain);
+bool validateBlockchainOLD(const vector<Block>& chain);

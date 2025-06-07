@@ -101,3 +101,28 @@ void saveAllChains(const vector<vector<Block>>& allChains, int mainIndex, const 
     out.close();
 }
 
+bool isTxInChainSet(const string& txID, const ChainSet& chainSet) {
+    for (const auto& chain : chainSet.chains) {
+        for (const auto& block : chain) {
+            for (const auto& t : block.transactions) {
+                if (t.id == txID) return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool isTxInChainSetOrValidTxs(const string& txID, const ChainSet& chainSet, const vector<Transaction>& validTxs) {
+    for (const auto& chain : chainSet.chains) {
+        for (const auto& block : chain) {
+            for (const auto& t : block.transactions) {
+                if (t.id == txID) return true;
+            }
+        }
+    }
+    for (const auto& tx : validTxs) {
+        if (tx.id == txID) return true;
+    }
+    return false;
+}
+
