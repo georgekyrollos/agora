@@ -7,19 +7,20 @@
 #include "chainset.hpp"
 #include "p2p.hpp"
 #include "sync.hpp"
+#include "message.hpp"
 #include <iostream>
 
 void handleMessage(const json& j)
 {
     string type;
     j.at("type").get_to(type);
-    if(type == "TX")
+    if(type == TX_FLAG)
     {
         Transaction tx;
         from_json(j.at("transaction"), tx);
         handleTransaction(tx);
     }
-    else if(type == "BLOCK")
+    else if(type == BK_FLAG)
     {
         Block bk(j.at("block").at("index"), j.at("block").at("timestamp"), j.at("block").at("transactions").get<vector<Transaction>>(), j.at("block").at("previousHash"));
         from_json(j.at("block"), bk);

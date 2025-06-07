@@ -13,7 +13,9 @@ SRC = \
 	blockchain.cpp \
 	chainset.cpp \
 	validate.cpp \
-	sync.cpp
+	sync.cpp \
+	message.cpp \
+	p2p.cpp
 
 CREATE_WALLET_SRC = \
 	create_wallet.cpp \
@@ -31,7 +33,10 @@ MINER_SRC = \
 	transaction.cpp \
 	crypto.cpp \
 	validate.cpp \
-	sync.cpp
+	sync.cpp \
+	message.cpp \
+	p2p.cpp \
+	handlers.cpp
 
 LISTENER_SRC = \
 	listener.cpp \

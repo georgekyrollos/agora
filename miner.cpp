@@ -4,6 +4,9 @@
 #include "transaction.hpp"
 #include "crypto.hpp"
 #include "wallet.hpp"
+#include "message.hpp"
+#include "p2p.hpp"
+#include "handlers.hpp" 
 
 #include <iostream>
 #include <fstream>
@@ -113,8 +116,11 @@ int main(int argc, char* argv[]) {
         mineBlock(genesisBlock, DIFFICULTY);
         std::cout << "Genesis block mined: " << genesisBlock.hash << "\n";
     
-        chainSet.addNewChain({genesisBlock});
-        saveAllChains(chainSet.chains, 0, BLOCKCHAINS_FILE);
+        // chainSet.addNewChain({genesisBlock});
+        // saveAllChains(chainSet.chains, 0, BLOCKCHAINS_FILE);
+        string msg = formatBlockMsg(genesisBlock);
+        broadcastMessage(msg, DEFAULT_PORT);
+        handleBlock(genesisBlock);
     }
 
     vector<Transaction> mempool = loadMempool();
@@ -153,7 +159,7 @@ int main(int argc, char* argv[]) {
         if (tx.fromPublicKeyHex == "COINBASE") continue;
 
         if (seenTxIDs.count(tx.id) || isTxInChainSet(tx.id, chainSet)) {
-            std::cout << "Skipping duplicate transaction " << tx.id << "\n";
+           // std::cout << "Skipping duplicate transaction " << tx.id << "\n";
             continue;
         }
 
@@ -204,9 +210,14 @@ int main(int argc, char* argv[]) {
     mineBlock(newBlock, DIFFICULTY);
     std::cout << "Block mined: " << newBlock.hash << "\n";
 
-    chainSet.chains[chainSet.mainIndex].push_back(newBlock);
-    chainSet.tryReplaceMainChain(chainSet.chains[chainSet.mainIndex]);
-    saveAllChains(chainSet.chains, chainSet.mainIndex, BLOCKCHAINS_FILE);
+    string msg = formatBlockMsg(newBlock);
+    broadcastMessage(msg, DEFAULT_PORT);
+    handleBlock(newBlock);
+
+
+    // chainSet.chains[chainSet.mainIndex].push_back(newBlock);
+    // chainSet.tryReplaceMainChain(chainSet.chains[chainSet.mainIndex]);
+    // saveAllChains(chainSet.chains, chainSet.mainIndex, BLOCKCHAINS_FILE);
 
     // Remove included transactions from mempool
     for (const auto& tx : validTxs) {

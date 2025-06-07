@@ -4,6 +4,8 @@
 #include "mempool.hpp"
 #include "blockchain.hpp"
 #include "chainset.hpp"
+#include "message.hpp"
+#include "p2p.hpp"
 #include <vector>
 #include <string>
 
@@ -82,11 +84,12 @@ int main(int argc, char* argv[]) {
             tx.ts = getCurrentTimestamp();
             tx.id = computeTransactionID(tx);
 
-            
+            string txMsg = formatTransactionMsg(tx);
 
             if (verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
                 appendToMempool(tx);
-                std::cout << "Transaction signed and added to mempool.\n";
+                broadcastMessage(txMsg, DEFAULT_PORT);
+                std::cout << "Transaction signed and broadcasted.\n";
             } else {
                 std::cerr << "Signature failed to verify!\n";
             }
