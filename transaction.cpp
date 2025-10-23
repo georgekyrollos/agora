@@ -1,5 +1,6 @@
 #include "transaction.hpp"
 #include "crypto.hpp"
+#include <sstream>
 #include <nlohmann/json.hpp>
 
 #include <iostream>

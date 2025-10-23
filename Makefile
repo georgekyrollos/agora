@@ -1,7 +1,19 @@
+# Makefile for Macs
 CXX = g++
 CXXFLAGS = -std=c++17 -w -pthread
 LDFLAGS = -lssl -lcrypto
+
+# Detect Homebrew prefix if present
+HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null)
 INCLUDES = -I./
+ifneq ($(HOMEBREW_PREFIX),)
+  INCLUDES += -I$(HOMEBREW_PREFIX)/include
+  LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
+else
+  # Fallbacks (common defaults)
+  INCLUDES += -I/opt/homebrew/include -I/usr/local/include
+  LDFLAGS  += -L/opt/homebrew/lib -L/usr/local/lib
+endif
 
 SRC = \
 	main.cpp \
@@ -15,7 +27,8 @@ SRC = \
 	validate.cpp \
 	sync.cpp \
 	message.cpp \
-	p2p.cpp
+	p2p.cpp \
+	pseudonym_resolver.cpp
 
 CREATE_WALLET_SRC = \
 	create_wallet.cpp \
@@ -51,7 +64,6 @@ LISTENER_SRC = \
 	blockchain.cpp \
 	sync.cpp
 
-
 OBJS = $(SRC:.cpp=.o)
 CREATE_WALLET_OBJS = $(CREATE_WALLET_SRC:.cpp=.o)
 MINER_OBJS = $(MINER_SRC:.cpp=.o)
@@ -78,4 +90,3 @@ clean:
 	rm -f *.o agora create_wallet miner listener
 
 .PHONY: all clean
-
