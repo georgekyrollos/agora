@@ -10,8 +10,6 @@ A cryptocurrency node + wallet with:
 - **P2P** broadcast/listen (simple TCP), optional peer file
 - **Dynamic difficulty (ASERT)** per-block retarget (config in code)
 
-> Goal: keep it lightweight and easy to read/modify.
-
 ---
 
 ## Build
@@ -49,7 +47,6 @@ After `make`, you’ll have:
 - `create_wallet` — generate a new wallet
 - `miner` — simple miner (reads mempool, mines blocks, broadcasts)
 - `listener` — P2P listener/relay
-- *(optional)* `contacts` — if you added the small contacts CLI
 
 ---
 
@@ -79,7 +76,7 @@ wallet.dat            # your wallet (private/public key)
 
 ### 2) Add contacts (pseudonyms)
 
-Edit `data/pseudonyms.json` (create the file if missing):
+Edit `pseudonyms.json` (create the file if missing):
 
 ```json
 {
@@ -127,7 +124,7 @@ Menu:
 
 - **View balance** scans the current main chain from `blockchains.json`.
 - **Send**:
-  - Enter a **pseudonym** (must exist in `data/pseudonyms.json`).
+  - Enter a **pseudonym** (must exist in `pseudonyms.json`).
   - Enter an amount.
   - The wallet resolves the pseudonym → public key, builds & signs the tx, appends to `mempool.json`, and **broadcasts**.
 
@@ -161,7 +158,7 @@ List mempool contents without opening the wallet UI:
 ## Troubleshooting
 
 - **“Unknown pseudonym”**  
-  Run from the repo root (so `data/pseudonyms.json` is found), ensure valid JSON. If you edit while running, call `resolver.reload()` before lookup or restart.
+  Run from the repo root (so `pseudonyms.json` is found), ensure valid JSON. If you edit while running, call `resolver.reload()` before lookup or restart.
 
 - **Can’t connect / no broadcasts**  
   Likely a firewall/NAT. On macOS you may need to allow incoming connections for your binary. For home networks, enable port forwarding or run everything on localhost.
