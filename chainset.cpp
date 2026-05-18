@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <cstdio>
 
 using json = nlohmann::json;
 using std::ifstream;
@@ -10,7 +11,7 @@ using std::ofstream;
 
 
 bool ChainSet::hasMainChain() const {
-    return !chains.empty() && mainIndex >= 0 && mainIndex < chains.size();
+    return !chains.empty() && mainIndex >= 0 && (size_t)mainIndex < chains.size();
 }
 
 const vector<Block>& ChainSet::getMainChain() const {
@@ -92,13 +93,16 @@ void saveAllChains(const vector<vector<Block>>& allChains, int mainIndex, const 
     j["mainIndex"] = mainIndex;
     j["chains"] = allChains;
 
-    ofstream out(filename);
-    if (!out.is_open()) {
-        std::cerr << "Failed to open blockchain file for writing.\n";
-        return;
+    string tmp = filename + ".tmp";
+    {
+        ofstream out(tmp);
+        if (!out.is_open()) {
+            std::cerr << "Failed to open blockchain file for writing.\n";
+            return;
+        }
+        out << j.dump(4);
     }
-    out << j.dump(4);
-    out.close();
+    std::rename(tmp.c_str(), filename.c_str());
 }
 
 bool isTxInChainSet(const string& txID, const ChainSet& chainSet) {

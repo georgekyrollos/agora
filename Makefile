@@ -1,16 +1,17 @@
-# Makefile for Macs
+# Makefile for Agora (Linux / Mac)
 CXX = g++
-CXXFLAGS = -std=c++17 -w -pthread
+# -Wno-deprecated-declarations silences OpenSSL 3.0 EC_KEY deprecations.
+# The legacy EC_KEY API still works; migrating to EVP_PKEY is future work.
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-deprecated-declarations -pthread
 LDFLAGS = -lssl -lcrypto
 
-# Detect Homebrew prefix if present
+# Detect Homebrew prefix if present (Mac)
 HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null)
 INCLUDES = -I./
 ifneq ($(HOMEBREW_PREFIX),)
   INCLUDES += -I$(HOMEBREW_PREFIX)/include
   LDFLAGS  += -L$(HOMEBREW_PREFIX)/lib
 else
-  # Fallbacks (common defaults)
   INCLUDES += -I/opt/homebrew/include -I/usr/local/include
   LDFLAGS  += -L/opt/homebrew/lib -L/usr/local/lib
 endif
@@ -62,6 +63,20 @@ LISTENER_SRC = \
 	mempool.cpp \
 	crypto.cpp \
 	blockchain.cpp \
+	sync.cpp \
+	message.cpp
+
+# Test sources compiled separately with AGORA_DIFFICULTY=1 for fast PoW in unit tests
+TEST_SRC = \
+	test_blockchain.cpp \
+	blockchain.cpp \
+	block.cpp \
+	transaction.cpp \
+	crypto.cpp \
+	validate.cpp \
+	chainset.cpp \
+	mempool.cpp \
+	wallet.cpp \
 	sync.cpp
 
 OBJS = $(SRC:.cpp=.o)
@@ -86,7 +101,14 @@ listener: $(LISTENER_OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-clean:
-	rm -f *.o agora create_wallet miner listener
+# Compile test binary fresh each time with AGORA_DIFFICULTY=1 to avoid .o conflicts
+test_blockchain: $(TEST_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -DAGORA_DIFFICULTY=1 -o $@ $^ $(LDFLAGS)
 
-.PHONY: all clean
+test: test_blockchain
+	./test_blockchain
+
+clean:
+	rm -f *.o agora create_wallet miner listener test_blockchain
+
+.PHONY: all test clean

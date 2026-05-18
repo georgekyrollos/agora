@@ -1,5 +1,7 @@
 # Agora
 
+> **Prototype warning:** Agora is experimental educational software. Do **not** use it for real funds, public fundraising, or production cryptocurrency deployment without major additional engineering, threat modeling, and independent security review.
+
 A cryptocurrency node + wallet with:
 
 - **Wallet & CLI** (create, view balance, send)
@@ -24,7 +26,7 @@ make clean && make
 If Homebrew is in a non-standard prefix, update `INCLUDES`/`LDFLAGS` in the Makefile or run:
 
 ```bash
-make CXXFLAGS="-std=c++17 -w -pthread -I/opt/homebrew/include"      LDFLAGS="-L/opt/homebrew/lib -lssl -lcrypto"
+make CXXFLAGS="-std=c++17 -Wall -Wextra -Wno-deprecated-declarations -pthread -I/opt/homebrew/include"      LDFLAGS="-L/opt/homebrew/lib -lssl -lcrypto"
 ```
 
 ### Linux
@@ -176,7 +178,8 @@ List mempool contents without opening the wallet UI:
 
 ## Safety notes
 
-- Wallet keys are stored locally in `wallet.dat`. Back it up.
+- Wallet keys are stored locally in `wallet.dat` as plaintext key material. The code now tries to set restrictive POSIX permissions, but there is no passphrase/KDF encryption yet.
+- Do not expose the listener to the public internet; the P2P layer is still a simple prototype protocol.
 - Pseudonyms are local to **your** machine (not a global registry).
 
 ---

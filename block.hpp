@@ -10,8 +10,12 @@ using std::vector;
 
 
 
-const int MAX_TXS_PER_BLOCK = 5; 
+const int MAX_TXS_PER_BLOCK = 5;
+#ifndef AGORA_DIFFICULTY
 const int DIFFICULTY = 6;
+#else
+const int DIFFICULTY = AGORA_DIFFICULTY;
+#endif
 const string REWARD_SIG = "reward";
 const string META = "COINBASE";
 

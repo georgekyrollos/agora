@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <cstdint>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -10,7 +11,7 @@ using std::vector;
 struct Transaction {
     string fromPublicKeyHex;
     string toPublicKeyHex;
-    double amount;
+    int64_t amount;  // integer smallest-unit; no floating point
     string signatureHex;
     string ts;
     string id;
@@ -20,7 +21,7 @@ struct Transaction {
     }
 };
 
-string buildTransactionMessage(const string& from, const string& to, int amount);
+string buildTransactionMessage(const string& from, const string& to, int64_t amount);
 string computeTransactionID(const Transaction& tx);
 
 void to_json(json& j, const Transaction& tx);

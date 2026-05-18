@@ -11,14 +11,13 @@ string computeTransactionID(const Transaction& tx) {
     std::ostringstream oss;
     oss << tx.fromPublicKeyHex
         << tx.toPublicKeyHex
-        << tx.amount
-        << tx.ts;  
+        << std::to_string(tx.amount)
+        << tx.ts;
     return sha256(oss.str());
 }
 
-
-string buildTransactionMessage(const string& from, const string& to, int amount) {
-    return from + "|" + to + "|" + std::to_string(amount); 
+string buildTransactionMessage(const string& from, const string& to, int64_t amount) {
+    return from + "|" + to + "|" + std::to_string(amount);
 }
 
 void to_json(json& j, const Transaction& tx) {

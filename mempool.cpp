@@ -2,6 +2,7 @@
 #include "mempool.hpp"
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -19,11 +20,12 @@ void appendToMempool(const Transaction& tx) {
 
     json txJson;
     to_json(txJson, tx);
-
     mempool.push_back(txJson);
 
-    std::ofstream outFile("mempool.json");
+    std::ofstream outFile("mempool.json.tmp");
     outFile << mempool.dump(4);
+    outFile.close();
+    std::rename("mempool.json.tmp", "mempool.json");
 }
 
 vector<Transaction> readMempool() {

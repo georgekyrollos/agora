@@ -95,13 +95,22 @@ void listenOnPort(int port, const std::function<void(const string&)>& handler) {
         }
 
         thread([new_socket, handler]() {
-            char buffer[4096] = {0};
-            ssize_t valread = read(new_socket, buffer, sizeof(buffer));
-            if (valread > 0) {
-                string message(buffer, valread);
-                handler(message);
+            // 1 MB cap — rejects oversized messages before JSON parsing
+            static const size_t MAX_MSG_BYTES = 1 * 1024 * 1024;
+            char buffer[65536] = {0};
+            string message;
+            ssize_t valread;
+            while ((valread = read(new_socket, buffer, sizeof(buffer))) > 0) {
+                message.append(buffer, valread);
+                if (message.size() > MAX_MSG_BYTES) {
+                    std::cerr << "[p2p] Oversized message rejected ("
+                              << message.size() << " bytes)\n";
+                    message.clear();
+                    break;
+                }
             }
+            if (!message.empty()) handler(message);
             close(new_socket);
-        }).detach(); 
+        }).detach();
     }
 }

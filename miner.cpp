@@ -16,6 +16,7 @@
 #include <sstream>
 #include <algorithm>
 #include <unordered_set>
+#include <cstdio>
 
 using json = nlohmann::json;
 using std::string;
@@ -69,11 +70,14 @@ vector<Transaction> loadMempool() {
     return j.get<vector<Transaction>>();
 }
 
-// Save mempool
+// Save mempool atomically
 void saveMempool(const vector<Transaction>& mempool) {
-    std::ofstream out(MEMPOOL_FILE);
-    json j = mempool;
-    out << j.dump(4);
+    string tmp = string(MEMPOOL_FILE) + ".tmp";
+    {
+        std::ofstream out(tmp);
+        out << json(mempool).dump(4);
+    }
+    std::rename(tmp.c_str(), string(MEMPOOL_FILE).c_str());
 }
 
 int main(int argc, char* argv[]) {
@@ -164,7 +168,7 @@ int main(int argc, char* argv[]) {
         }
 
         string msg = buildTransactionMessage(tx.fromPublicKeyHex, tx.toPublicKeyHex, tx.amount);
-        double senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);
+        int64_t senderBalance = getEffectiveBalanceDuringMining(tx.fromPublicKeyHex, chainSet.chains[chainSet.mainIndex], validTxs);
 
         if (!verifySignature(msg, tx.signatureHex, tx.fromPublicKeyHex)) {
             std::cout << "Skipping invalid transaction from " << tx.fromPublicKeyHex << "\n";

@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
             const string BLOCKCHAINS_FILE = "blockchains.json";
             ChainSet chainSet = loadChainSet(BLOCKCHAINS_FILE);
             vector<Block> chain = chainSet.getMainChain();
-            double balance = getBalance(w.publicKeyHex, chain);
+            int64_t balance = getBalance(w.publicKeyHex, chain);
             cout << "Your current balance is: " << balance << "\n";
 
         } else if (choice == 2) {

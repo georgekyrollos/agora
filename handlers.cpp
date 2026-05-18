@@ -85,8 +85,6 @@ void handleTransaction(Transaction tx)
 void handleBlock(Block bk) {
     std::lock_guard<std::mutex> lock(chainsetMutex);
     ChainSet chainSet = loadChainSet(BLOCKCHAINS_FILE);
-    bool addedToExisting = false;
-
     if (chainSet.chains.empty() && bk.index == 0 && bk.previousHash == "0") {
         if (validateBlock(bk, bk, {})) {  
             chainSet.chains.push_back({bk});
@@ -105,7 +103,6 @@ void handleBlock(Block bk) {
         if (chain.back().hash == bk.previousHash) {
             if (validateBlock(bk, chain.back(), chain)) {
                 chain.push_back(bk);
-                addedToExisting = true;
                 chainSet.tryReplaceMainChain(chain);
                 saveAllChains(chainSet.chains, chainSet.mainIndex, BLOCKCHAINS_FILE);
                 std::cout << "Block added to chain (extended)\n";

@@ -5,9 +5,8 @@
 #include <string>
 #include <vector>
 #include <ctime>
-#include <fstream>        
-#include <stdexcept>      
-
+#include <cstdio>
+#include <stdexcept>
 
 using json = nlohmann::json;
 using std::ifstream;
@@ -51,10 +50,12 @@ vector<Block> loadBlockchain(const string& filename) {
 }
 
 void saveBlockchain(const vector<Block>& chain, const string& filename) {
-    json j = chain;
-    ofstream out(filename);
-    out << j.dump(4);
-    out.close();
+    string tmp = filename + ".tmp";
+    {
+        ofstream out(tmp);
+        out << json(chain).dump(4);
+    }
+    std::rename(tmp.c_str(), filename.c_str());
 }
 
 const Block& getLastBlock(const vector<Block>& chain) {
