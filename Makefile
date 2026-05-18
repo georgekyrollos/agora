@@ -108,7 +108,16 @@ test_blockchain: $(TEST_SRC)
 test: test_blockchain
 	./test_blockchain
 
-clean:
-	rm -f *.o agora create_wallet miner listener test_blockchain
+# Sanitizer build — ASAN + UBSAN on the test suite only; never linked into release binaries.
+# Uses a separate output binary so it does not conflict with normal test_blockchain .o files.
+test-san: $(TEST_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -DAGORA_DIFFICULTY=1 \
+	    -fsanitize=address,undefined -fno-omit-frame-pointer \
+	    -o test_blockchain_san $^ $(LDFLAGS)
+	./test_blockchain_san
+	rm -f test_blockchain_san
 
-.PHONY: all test clean
+clean:
+	rm -f *.o agora create_wallet miner listener test_blockchain test_blockchain_san
+
+.PHONY: all test test-san clean

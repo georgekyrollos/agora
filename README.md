@@ -10,7 +10,7 @@ A cryptocurrency node + wallet with:
 - **Blocks + Mining** (CPU PoW) and chain validation
 - **Fork support** via a **ChainSet** (selects the best chain)
 - **P2P** broadcast/listen (simple TCP), optional peer file
-- **Dynamic difficulty (ASERT)** per-block retarget (config in code)
+- **Fixed PoW difficulty** (compile-time leading-zero target; dynamic per-block retarget is not yet implemented)
 
 ---
 
@@ -151,7 +151,7 @@ List mempool contents without opening the wallet UI:
 
 ## Configuration (in code)
 
-- **Consensus**: block time target, ASERT half-life, max target, coinbase amount/maturity.
+- **Consensus**: compile-time `DIFFICULTY` (leading-zero PoW), `BLOCK_REWARD`, `MAX_TXS_PER_BLOCK`.
 - **Networking**: default port, peer file (`ips.dat`).
 - **Paths**: filenames shown above; change in code if you want a data dir.
 
