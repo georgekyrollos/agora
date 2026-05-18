@@ -1,0 +1,28 @@
+# Build outputs
+*.o
+agora
+create_wallet
+miner
+listener
+test_blockchain
+wallet
+transaction
+
+# Wallet/private key material
+wallet*.dat
+*.key
+*.pem
+
+# Runtime chain/network state
+blockchain.json
+blockchains.json
+mempool.json
+ips.dat
+pseudonyms.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
